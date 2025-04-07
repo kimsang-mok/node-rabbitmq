@@ -11,6 +11,9 @@ app.set("port", process.env.PORT);
 
 app.use(morganMiddleware());
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use("/api/v1", v1Route);
 
 export default app;

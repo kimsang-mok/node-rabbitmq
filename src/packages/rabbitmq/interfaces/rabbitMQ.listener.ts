@@ -1,6 +1,6 @@
 export interface IRabbitMQListener<T> {
   queue: string;
   routingKey: string;
-  exhange: string;
+  exchange: string;
   onMessage(data: T): Promise<void>;
 }

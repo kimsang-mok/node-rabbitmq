@@ -8,7 +8,8 @@
     "start": "node dist/src/server.js",
     "watch-ts": "tsc -w",
     "watch-node": "nodemon dist/src/server.js",
-    "dev": "concurrently -k -p \"[{name}]\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\""
+    "dev": "concurrently -k -p \"[{name}]\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
+    "start:worker:user": "ts-node src/workers/user.worker.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,7 @@
     "amqplib": "^0.10.7",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "module-alias": "^2.2.3",
     "morgan": "^1.10.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
@@ -30,5 +32,8 @@
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+  },
+  "_moduleAliases": {
+    "@src": "dist/src"
   }
 }

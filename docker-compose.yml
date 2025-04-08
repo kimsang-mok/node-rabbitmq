@@ -1,0 +1,40 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  app:
+    build: .
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - .:/app
+    command: npm run dev
+    ports:
+      - "3000:3000"
+
+  user-worker:
+    build: .
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - .:/app
+    command:
+      [
+        "./scripts/wait-for.sh",
+        "rabbitmq",
+        "npx",
+        "ts-node",
+        "-r",
+        "tsconfig-paths/register",
+        "src/workers/user.worker.ts",
+      ]

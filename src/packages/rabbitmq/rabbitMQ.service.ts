@@ -4,7 +4,9 @@ export class RabbitMQService {
   private connection: ChannelModel | null = null;
   private channel: Channel | null = null;
 
-  constructor(private url: string = "amqp://localhost") {}
+  constructor(
+    private url: string = process.env.RABBITMQ_URL || "amqp://localhost"
+  ) {}
 
   async connect(): Promise<void> {
     if (this.connection && this.channel) return;

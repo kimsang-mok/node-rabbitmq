@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/src/server.js",
+    "start": "node dist/server.js",
     "watch-ts": "tsc -w",
     "watch-node": "nodemon dist/src/server.js",
     "dev": "concurrently -k -p \"[{name}]\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
@@ -31,6 +31,7 @@
     "concurrently": "^9.1.2",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   },
   "_moduleAliases": {

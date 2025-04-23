@@ -2,7 +2,7 @@ import { BaseRabbitMQListener } from "@src/packages/rabbitmq/baseRabbitMQ.listen
 import rabbitMQService, {
   RabbitMQService,
 } from "@src/packages/rabbitmq/rabbitMQ.service";
-import { UserCreatedEvent } from "@src/packages/rabbitmq/types/user.event";
+import { UserCreatedEvent } from "@src/modules/users/events/user.event";
 
 export class UserCreatedListener extends BaseRabbitMQListener<UserCreatedEvent> {
   exchange = "user-events";

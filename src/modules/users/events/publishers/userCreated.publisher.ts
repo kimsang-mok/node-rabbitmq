@@ -3,7 +3,7 @@ import rabbitMQService, {
   RabbitMQService,
 } from "@src/packages/rabbitmq/rabbitMQ.service";
 
-import { UserCreatedEvent } from "@src/packages/rabbitmq/types/user.event";
+import { UserCreatedEvent } from "@src/modules/users/events/user.event";
 
 export class UserCreatedPublisher
   implements IRabbitMQPublisher<UserCreatedEvent>

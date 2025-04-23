@@ -11,6 +11,13 @@ export class UserController extends Controller {
     const result = await this.service.createUser(req.body);
     this.created(res, result);
   });
+
+  createUserWith5sDelay = Controller.catchAsync(
+    async (req: Request, res: Response) => {
+      const result = await this.service.createUserWith5sDelay(req.body);
+      this.created(res, result);
+    }
+  );
 }
 
 export default new UserController(userService);

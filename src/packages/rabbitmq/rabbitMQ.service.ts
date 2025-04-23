@@ -196,6 +196,46 @@ export class RabbitMQService {
     });
   }
 
+  async publishDelayed<T>(
+    targetExchange: string,
+    routingKey: string,
+    data: T,
+    delayMs: number
+  ): Promise<void> {
+    const delayQueue = `${targetExchange}.${routingKey}.delay`;
+
+    await this.connect();
+
+    await this.channel!.assertQueue(delayQueue, {
+      durable: true,
+      arguments: {
+        "x-dead-letter-exchange": targetExchange,
+        "x-dead-letter-routing-key": routingKey,
+        "x-message-ttl": delayMs,
+      },
+    });
+
+    const payload = Buffer.from(JSON.stringify(data));
+
+    try {
+      const success = this.channel!.sendToQueue(delayQueue, payload, {
+        persistent: true,
+      });
+
+      if (!success) {
+        throw new Error(`[RabbitMQ] Backpressure on queue: ${delayQueue}`);
+      }
+
+      console.log(
+        `[RabbitMQ] Delayed publish to "${targetExchange}" [${routingKey}] in ${delayMs}ms`
+      );
+    } catch (error) {
+      throw new Error(
+        `[RabbitMQ] Failed to send message to ${delayQueue}: ${error}`
+      );
+    }
+  }
+
   async close(): Promise<void> {
     await this.channel?.close();
     await this.connection?.close();

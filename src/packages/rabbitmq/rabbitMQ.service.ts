@@ -196,6 +196,17 @@ export class RabbitMQService {
     });
   }
 
+  /**
+   * NOTE: We cannot re-declare the same queue with differnt TTLs dynamically
+   * That's because RabbitMQ binds TTL at the queue level, not per message.
+   * Queues cannot change their `x-message-ttl` after declaration
+   * Each distinct delay requires a distinct queue
+   *
+   * @param targetExchange
+   * @param routingKey
+   * @param data
+   * @param delayMs
+   */
   async publishDelayed<T>(
     targetExchange: string,
     routingKey: string,
@@ -206,6 +217,7 @@ export class RabbitMQService {
 
     await this.connect();
 
+    // delay queue with TTL and DLX settings
     await this.channel!.assertQueue(delayQueue, {
       durable: true,
       arguments: {
@@ -218,9 +230,13 @@ export class RabbitMQService {
     const payload = Buffer.from(JSON.stringify(data));
 
     try {
+      /**
+       * In the delayed message pattern (using TTL queues + DLX), we're directly
+       * sending a messsage to a specially prepared delay queue, not to a general-purpose exchange
+       */
       const success = this.channel!.sendToQueue(delayQueue, payload, {
         persistent: true,
-      });
+      }); // can fail in some edge cases (closed channel, buffer full)
 
       if (!success) {
         throw new Error(`[RabbitMQ] Backpressure on queue: ${delayQueue}`);

@@ -4,10 +4,10 @@ import rabbitMQService, {
   RabbitMQService,
 } from "@src/packages/rabbitmq/rabbitMQ.service";
 
-export class UserCreatedDelayedPublisher
+export class UserCreatedPluginDelayedPublisher
   implements IRabbitMQPublisher<UserCreatedEvent>
 {
-  exchange = "user-events";
+  exchange = "user-events-delayed";
   routingKey = "user.created";
 
   constructor(private readonly rabbitmq: RabbitMQService) {}
@@ -16,7 +16,7 @@ export class UserCreatedDelayedPublisher
     data: UserCreatedEvent,
     options: { delayMs: number }
   ): Promise<void> {
-    await this.rabbitmq.publishWithTTLQueue<UserCreatedEvent>(
+    await this.rabbitmq.publishWithPluginDelay<UserCreatedEvent>(
       this.exchange,
       this.routingKey,
       data,
@@ -25,4 +25,4 @@ export class UserCreatedDelayedPublisher
   }
 }
 
-export default new UserCreatedDelayedPublisher(rabbitMQService);
+export default new UserCreatedPluginDelayedPublisher(rabbitMQService);

@@ -1,4 +1,5 @@
 import amqp, { Channel, ChannelModel } from "amqplib";
+import { ExchangeOptions } from "./interfaces/types";
 
 export class RabbitMQService {
   private connection: ChannelModel | null = null;
@@ -40,7 +41,7 @@ export class RabbitMQService {
 
   async assertExchange(
     exhange: string,
-    type: "topic" | "direct" | "fanout" = "topic"
+    type: ExchangeOptions["type"] = "topic"
   ) {
     await this.connect();
     await this.channel!.assertExchange(exhange, type, { durable: true });
@@ -102,7 +103,8 @@ export class RabbitMQService {
       backoffInitial?: number;
       backoffMultiplier?: number;
       backoffMax?: number;
-    }
+    },
+    exchangeOptions: ExchangeOptions = { type: "topic" }
   ) {
     await this.connect();
     const ch = this.channel!;
@@ -125,7 +127,10 @@ export class RabbitMQService {
     );
 
     // declare main exchange & queue with DLX to retry exchange
-    await ch.assertExchange(exchange, "topic", { durable: true });
+    await ch.assertExchange(exchange, exchangeOptions.type ?? "topic", {
+      durable: true,
+      arguments: exchangeOptions.arguments,
+    });
     await ch.assertQueue(queue, {
       durable: true,
       arguments: {
@@ -197,17 +202,19 @@ export class RabbitMQService {
   }
 
   /**
-   * NOTE: We cannot re-declare the same queue with differnt TTLs dynamically
+   * Delays message using TTL-based DLX queue (each delay uses a dedicated queue).
+   *
+   * NOTE: We cannot re-declare the same queue with differnt TTLs dynamically.
    * That's because RabbitMQ binds TTL at the queue level, not per message.
-   * Queues cannot change their `x-message-ttl` after declaration
-   * Each distinct delay requires a distinct queue
+   * Queues cannot change their `x-message-ttl` after declaration.
+   * Each distinct delay requires a distinct queue.
    *
    * @param targetExchange
    * @param routingKey
    * @param data
    * @param delayMs
    */
-  async publishDelayed<T>(
+  async publishWithTTLQueue<T>(
     targetExchange: string,
     routingKey: string,
     data: T,
@@ -250,6 +257,47 @@ export class RabbitMQService {
         `[RabbitMQ] Failed to send message to ${delayQueue}: ${error}`
       );
     }
+  }
+
+  /**
+   * Delays message using RabbitMQ x-delayed-message plugin (per-message delay)
+   *
+   * @param exchange
+   * @param routingKey
+   * @param data
+   * @param delayMs
+   */
+  async publishWithPluginDelay<T>(
+    exchange: string,
+    routingKey: string,
+    data: T,
+    delayMs: number
+  ): Promise<void> {
+    await this.connect();
+
+    await this.channel!.assertExchange(exchange, "x-delayed-message", {
+      durable: true,
+      arguments: {
+        "x-delayed-type": "topic",
+      },
+    });
+
+    const payload = Buffer.from(JSON.stringify(data));
+
+    const success = this.channel!.publish(exchange, routingKey, payload, {
+      headers: {
+        "x-delay": delayMs,
+      },
+      persistent: true,
+    });
+
+    if (!success) {
+      throw new Error(`[RabbitMQ] Backpressure on exchange: ${exchange}`);
+    }
+
+    console.log(
+      `[RabbitMQ] Delayed (plugin) publish to "${exchange}" [${routingKey}] in ${delayMs}ms`
+    );
   }
 
   async close(): Promise<void> {

@@ -18,6 +18,16 @@ export class UserController extends Controller {
       this.created(res, result);
     }
   );
+
+  createUserWithDynamicDelay = Controller.catchAsync(
+    async (req: Request, res: Response) => {
+      const result = await this.service.createUserWithDynamicDelay(
+        req.body,
+        req.body.delayMs
+      );
+      this.created(res, result);
+    }
+  );
 }
 
 export default new UserController(userService);

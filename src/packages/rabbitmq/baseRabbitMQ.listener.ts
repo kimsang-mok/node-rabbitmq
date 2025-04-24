@@ -1,3 +1,4 @@
+import { ExchangeOptions } from "./interfaces/types";
 import { RabbitMQService } from "./rabbitMQ.service";
 
 export abstract class BaseRabbitMQListener<T> {
@@ -13,7 +14,8 @@ export abstract class BaseRabbitMQListener<T> {
       backoffInitial?: number;
       backoffMultiplier?: number;
       backoffMax?: number;
-    } = {}
+    } = {},
+    private readonly exchangeOptions: ExchangeOptions = { type: "topic" }
   ) {}
 
   public async listen(): Promise<void> {
@@ -48,7 +50,8 @@ export abstract class BaseRabbitMQListener<T> {
         retryExchange: `${this.exchange}.retry`,
         retryQueuePrefix: `${this.queue}.retry`,
         parkingLotQueue: `${this.queue}.parkinglot`,
-      }
+      },
+      this.exchangeOptions
     );
   }
 }

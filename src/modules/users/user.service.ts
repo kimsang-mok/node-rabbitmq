@@ -5,11 +5,15 @@ import { UserCreatedEvent } from "@src/modules/users/events/user.event";
 import userCreatedDelayedPublisher, {
   UserCreatedDelayedPublisher,
 } from "./events/publishers/userCreatedDelayed.publisher";
+import userCreatedPluginDelayedPublisher, {
+  UserCreatedPluginDelayedPublisher,
+} from "./events/publishers/userCreatedPluginDelayed.publisher";
 
 export class UserService {
   constructor(
     private userCreatedPublisher: UserCreatedPublisher,
-    private userCreatedDelayedPublisher: UserCreatedDelayedPublisher
+    private userCreatedDelayedPublisher: UserCreatedDelayedPublisher,
+    private userCreatedPluginDelatedPublisher: UserCreatedPluginDelayedPublisher
   ) {}
 
   async createUser(data: UserCreatedEvent) {
@@ -21,9 +25,16 @@ export class UserService {
       delayMs: 5000,
     });
   }
+
+  async createUserWithDynamicDelay(data: UserCreatedEvent, delayMs: number) {
+    return await this.userCreatedPluginDelatedPublisher.publish(data, {
+      delayMs,
+    });
+  }
 }
 
 export default new UserService(
   userCreatedPublisher,
-  userCreatedDelayedPublisher
+  userCreatedDelayedPublisher,
+  userCreatedPluginDelayedPublisher
 );
